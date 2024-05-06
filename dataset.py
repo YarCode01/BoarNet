@@ -38,7 +38,7 @@ def parse_annotation(annotation_path):
             for line in file:
                 data = line.strip().split()
                 class_label = int(data[0])
-                class_label = 0 # the class in the text file is wrong
+                class_label = 1 # the class in the text file is wrong
 
                 # Convert coordinates to [x_min, y_min, x_max, y_max]
                 x_min = float(data[1])
@@ -64,7 +64,6 @@ class BoarDataset(Dataset):
         self.img_path = img_path
         self.transform = transform or transforms.Compose([
             transforms.ToTensor(), 
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         self.imgs, self.boxes, self.labels = self.get_data()
         
@@ -72,7 +71,11 @@ class BoarDataset(Dataset):
         return self.imgs.size(dim=0)
     
     def __getitem__(self, idx):
-        return self.imgs[idx], self.boxes[idx], self.labels[idx]
+        target = {}
+        img = self.imgs[idx]
+        target["boxes"] = torch.as_tensor(self.boxes[idx], dtype=torch.float32)
+        target["labels"] = torch.as_tensor(self.labels[idx], dtype=torch.int64)
+        return img, target
         
     def get_data(self):
         imgs = []
@@ -90,7 +93,5 @@ class BoarDataset(Dataset):
             classes.append(labels_tensor)
         
         imgs = torch.stack(imgs, dim=0)
-        # boxes = pad_sequence(boxes, batch_first=True, padding_value=0)
-        # classes = pad_sequence(classes, batch_first=True, padding_value=0)  # Use -1 for classes padding if it is a safe 'ignore' index
-
+        
         return imgs, boxes, classes
