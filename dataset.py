@@ -1,20 +1,11 @@
-
-import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
-import random
 import matplotlib.patches as patches
 import os
 
 from torchvision.io import read_image
 import torch
-import torchvision
 from torchvision import transforms
-from torchvision import ops
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset
-from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import  Dataset
 
 DEFAULT_IMG_PATH = "data/images"
 DEFAULT_ANNOTATION_PATH = "data/annotation_txts"
@@ -71,11 +62,11 @@ class BoarDataset(Dataset):
         return self.imgs.size(dim=0)
     
     def __getitem__(self, idx):
-        target = {}
         img = self.imgs[idx]
-        target["boxes"] = torch.as_tensor(self.boxes[idx], dtype=torch.float32)
-        target["labels"] = torch.as_tensor(self.labels[idx], dtype=torch.int64)
-        return img, target
+        target = {}
+        target["boxes"] = self.boxes[idx]
+        target["labels"] = self.labels[idx]
+        return {"image": img, "target": target}
         
     def get_data(self):
         imgs = []
@@ -93,5 +84,6 @@ class BoarDataset(Dataset):
             classes.append(labels_tensor)
         
         imgs = torch.stack(imgs, dim=0)
-        
+        # boxes = torch.nn.utils.rnn.pad_sequence(boxes, batch_first=True, padding_value=1)  # pad with -1
+        # classes = torch.nn.utils.rnn.pad_sequence(classes, batch_first=True, padding_value=-1)  # pad labels with -1
         return imgs, boxes, classes
