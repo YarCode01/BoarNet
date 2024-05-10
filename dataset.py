@@ -7,8 +7,8 @@ import torch
 from torchvision import transforms
 from torch.utils.data import  Dataset
 
-DEFAULT_IMG_PATH = "data/images"
-DEFAULT_ANNOTATION_PATH = "data/annotation_txts"
+DEFAULT_IMG_PATH = "data/train/images"
+DEFAULT_ANNOTATION_PATH = "data/train/annotation_txts"
 
 def parse_path(img_path, annotation_path):
     # List all files in the given directory
@@ -18,7 +18,7 @@ def parse_path(img_path, annotation_path):
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
     path_images = [f"{img_path}/{file_name}" for file_name in file_names]
     image_filenames_no_ext = [os.path.splitext(file)[0] for file in file_names if os.path.splitext(file)[1].lower() in image_extensions]
-    assert len(image_filenames_no_ext) == len(path_images)
+    assert len(image_filenames_no_ext) == (len(path_images))
     path_annotations = [f"{annotation_path}/{file_name}.txt" for file_name in image_filenames_no_ext]
     return path_images, path_annotations
 
@@ -41,16 +41,7 @@ def parse_annotation(annotation_path):
     return torch.as_tensor(boxes, dtype=torch.float32), torch.as_tensor(labels, dtype=torch.int64)
 
 class BoarDataset(Dataset):
-    '''
-    A Pytorch Dataset class to load the images and their corresponding annotations.
-    
-    Returns
-    ------------
-    images: torch.Tensor of size (B, C, H, W)
-    gt bboxes: torch.Tensor of size (B, max_objects, 4)
-    gt classes: torch.Tensor of size (B, max_objects)
-    '''
-    def __init__(self, img_path=DEFAULT_IMG_PATH, annotation_path=DEFAULT_ANNOTATION_PATH, transform=None):
+    def __init__(self, img_path=DEFAULT_IMG_PATH, annotation_path=DEFAULT_ANNOTATION_PATH, transform=None, yolo_format=False):
         self.annotation_path = annotation_path
         self.img_path = img_path
         self.transform = transform or transforms.Compose([
@@ -84,6 +75,4 @@ class BoarDataset(Dataset):
             classes.append(labels_tensor)
         
         imgs = torch.stack(imgs, dim=0)
-        # boxes = torch.nn.utils.rnn.pad_sequence(boxes, batch_first=True, padding_value=1)  # pad with -1
-        # classes = torch.nn.utils.rnn.pad_sequence(classes, batch_first=True, padding_value=-1)  # pad labels with -1
         return imgs, boxes, classes
