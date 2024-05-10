@@ -21,11 +21,11 @@ MODEL_NAME = "fasterrcnn_mobilenet_v3_large_fpn"
 os.mkdir(MODEL_PATH)
 os.mkdir(RESULTS_PATH)
 
-TRAIN_IMG_PATH = "data/train/images"
-TRAIN_ANNOTATION_PATH = "data/train/annotation_txts"
+TRAIN_IMG_PATH = "data/Wild Boar.v1i.yolov7pytorch/train/images"
+TRAIN_ANNOTATION_PATH = "data/Wild Boar.v1i.yolov7pytorch/train/labels"
 
-TEST_IMG_PATH = "data/test/images"
-TEST_ANNOTATION_PATH = "data/test/annotation_txts"
+TEST_IMG_PATH = "data/train/images"
+TEST_ANNOTATION_PATH = "data/train/labels"
 
 # Use the custom collate function in your DataLoader
 def collate_fn(batch):
@@ -39,7 +39,7 @@ train_transform = transforms.Compose([
                         #  std=[0.229, 0.224, 0.225])
 ])
 
-train_dataset = BoarDataset(img_path=TRAIN_IMG_PATH, annotation_path=TRAIN_ANNOTATION_PATH,transform=train_transform)
+train_dataset = BoarDataset(img_path=TRAIN_IMG_PATH, annotation_path=TRAIN_ANNOTATION_PATH,transform=train_transform,yolo_format=True)
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn)
 
 test_dataset = BoarDataset(img_path=TEST_IMG_PATH, annotation_path=TEST_ANNOTATION_PATH,transform=train_transform)
@@ -93,6 +93,4 @@ for epoch in range(num_epochs):
     with open(f'{RESULTS_PATH}/test_losses.json', 'w') as f:
         json.dump(test_losses, f, indent=4)
 
-# Save model
-torch.save(model.state_dict(), f"models/exp/fasterrcnn_mobilenet_v3_large_fpn{num_epochs}.pth")
 

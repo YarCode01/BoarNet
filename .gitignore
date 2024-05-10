@@ -1,2 +1,3 @@
-data/annotation_txts/*.txt
-data/images/*
+data/
+results/
+models/

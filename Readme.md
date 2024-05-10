@@ -2,7 +2,7 @@ The project about wild boars
 
 Instructions:
 - Put the images into folder data/images
-- Put the annotation files into folder data/annotation_txts
+- Put the annotation files into folder data/labels
 - annotation file should be in the following format: [class] [x1] [y1] [x2] [y2]
 
 Sources:
