@@ -39,6 +39,6 @@ for index in range(len(test_dataset)):
     boxes = model(images)
     supressed_boxes = nms(bboxes=boxes[0]['boxes'], confidence_scores=boxes[0]['scores'],confidence_threshold=0.3, iou_threshold=0.3)
     try:
-        show_image_with_boxes(test_dataset_vis[index]['image'], supressed_boxes.tolist(), save_path=RESULTS_PATH+f"{index}.jpg")
+        show_image_with_boxes(test_dataset_vis[index]['image'], supressed_boxes['boxes'].tolist(), save_path=RESULTS_PATH+f"{index}.jpg")
     except:
         pass

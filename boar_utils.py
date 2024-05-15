@@ -180,19 +180,32 @@ def nms(bboxes, confidence_scores, confidence_threshold, iou_threshold):
     Result:
         
     """
-    bboxes = bboxes[confidence_scores.argsort(descending=True)]
-    bboxes = bboxes[confidence_scores>confidence_threshold]
+    mask = confidence_scores>confidence_threshold
+
+    bboxes = bboxes[mask]
+    confidence_scores = confidence_scores[mask]
+
+    mask = confidence_scores.argsort(descending=True)
+    bboxes = bboxes[mask]
+    confidence_scores = confidence_scores[mask]
+
     chosen_bboxes = []
+    chosen_scores = []
     while len(bboxes)>=2:
         chosen_bboxes.append(bboxes[0])
+        chosen_scores.append(confidence_scores[0])
         other_bboxes = bboxes[1:]
+        other_scores = confidence_scores[1:]
         ious = intersection_over_union(bboxes[0], other_bboxes)
-        bboxes = other_bboxes[ious<=iou_threshold]
+        mask = ious<=iou_threshold
+        bboxes = other_bboxes[mask]
+        confidence_scores = other_scores[mask]
     try:
         chosen_bboxes = torch.stack(chosen_bboxes)
     except:
         chosen_bboxes = torch.tensor([[]])
-    return chosen_bboxes
+    
+    return {"boxes" : chosen_bboxes, "scores": torch.tensor(chosen_scores), "labels" : torch.zeros(len(chosen_scores))}
 
 def calculate_true_positives(predictions, scores, targets, yolo_format_targets, yolo_format_predictions, IoU_threshold):
     img_dim = (300, 300)
