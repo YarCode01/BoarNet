@@ -1,11 +1,12 @@
 from PIL import Image
 import matplotlib.patches as patches
 import os
-
+import cv2
 from torchvision.io import read_image
 import torch
 from torchvision import transforms
 from torch.utils.data import  Dataset
+from torchvision import tv_tensors
 
 DEFAULT_IMG_PATH = "data/train/images"
 DEFAULT_ANNOTATION_PATH = "data/train/labels"
@@ -51,27 +52,40 @@ def parse_annotation(annotation_path, img_dim = None, yolo_format=False):
 
                 boxes.append([x_min, y_min, x_max, y_max])
                 labels.append(class_label)
-    return torch.as_tensor(boxes, dtype=torch.float32), torch.as_tensor(labels, dtype=torch.int64)
+    return boxes, labels
 
 
 class BoarDataset(Dataset):
-    def __init__(self, img_path=DEFAULT_IMG_PATH, annotation_path=DEFAULT_ANNOTATION_PATH, transform=None, yolo_format=False):
+    def __init__(self, img_path=DEFAULT_IMG_PATH, annotation_path=DEFAULT_ANNOTATION_PATH, transform=None, yolo_format=False, augmentations=None):
         self.annotation_path = annotation_path
         self.img_path = img_path
         self.transform = transform or transforms.Compose([
             transforms.ToTensor(), 
         ])
+        self.augmentations = augmentations
         self.yolo_format = yolo_format
         self.imgs, self.boxes, self.labels = self.get_data()
         
     def __len__(self):
-        return self.imgs.size(dim=0)
+        return len(self.imgs)
     
     def __getitem__(self, idx):
         img = self.imgs[idx]
         target = {}
-        target["boxes"] = self.boxes[idx]
-        target["labels"] = self.labels[idx]
+        bboxes = self.boxes[idx]
+        labels = self.labels[idx]
+        
+        if self.augmentations:
+            transformed = self.augmentations(image=img, bboxes=bboxes, labels=labels)
+            img = transformed['image']
+            bboxes = transformed['bboxes']
+            labels = transformed['labels']
+
+        bboxes_tensor = torch.Tensor(bboxes)
+        labels_tensor = torch.tensor(labels, dtype=torch.int64)
+        img = self.transform(img)
+        target["boxes"] = bboxes_tensor
+        target["labels"] = labels_tensor
         return {"image": img, "target": target}
         
     def get_data(self):
@@ -80,15 +94,12 @@ class BoarDataset(Dataset):
         boxes = []
         path_images, path_annotations = parse_path(img_path=self.img_path, annotation_path=self.annotation_path)
         for img_path, annotation_path in zip(path_images, path_annotations):
-
-            img = Image.open(img_path).convert("RGB")
-            img_dim = img.size
-            if self.transform:
-                img = self.transform(img)
-            boxes_tensor, labels_tensor = parse_annotation(annotation_path, img_dim, yolo_format=self.yolo_format)
+            
+            img = cv2.imread(img_path)
+            img_dim = img.shape[:2]
+            boxes_array, labels_array = parse_annotation(annotation_path, img_dim, yolo_format=self.yolo_format)
             imgs.append(img)
-            boxes.append(boxes_tensor)
-            classes.append(labels_tensor)
+            boxes.append(boxes_array)
+            classes.append(labels_array)
         
-        imgs = torch.stack(imgs, dim=0)
         return imgs, boxes, classes
