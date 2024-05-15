@@ -14,7 +14,7 @@ def get_current_time():
 
 def get_augmentations():
     albumentation_list = [
-        # A.RandomCrop(p=1, height=220, width=220),
+            A.RandomCrop(p=1, height=220, width=220),
             A.OneOf([
                 A.HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit= 0.2, 
                                      val_shift_limit=0.2, p=0.9),
@@ -22,14 +22,14 @@ def get_augmentations():
                                            contrast_limit=0.2, p=0.9),
             ],p=0.9),
             A.ToGray(p=0.01),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
-            # A.Resize(height=512, width=512, p=1),
+            A.HorizontalFlip(p=1),
+            A.VerticalFlip(p=1),
+            A.Resize(height=320, width=320, p=1),
             # A.Cutout(num_holes=8, max_h_size=64, max_w_size=64, fill_value=0, p=0.5),
     ]
     augmentations = A.Compose(
         albumentation_list,
-        bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'])
+        bbox_params=A.BboxParams(format='pascal_voc', label_fields=['labels'], check_each_transform=True)
     )
     return augmentations
 
