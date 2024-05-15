@@ -20,9 +20,6 @@ RESULTS_PATH = f"results/losses/{CURRENT_TIME}"
 MODEL_NAME = "fasterrcnn_mobilenet_v3_large_fpn"
 os.mkdir(MODEL_PATH)
 os.mkdir(RESULTS_PATH)
-H, W = 300, 300
-# TRAIN_IMG_PATH = "data/Wild Boar.v1i.yolov7pytorch/train/images"
-# TRAIN_ANNOTATION_PATH = "data/Wild Boar.v1i.yolov7pytorch/train/labels"
 
 TRAIN_IMG_PATH = "data/train/images"
 TRAIN_ANNOTATION_PATH = "data/train/labels"
@@ -38,26 +35,26 @@ def collate_fn(batch):
 
 train_transform = transforms.Compose([
     transforms.ToTensor(), 
-    # transforms.Normalize(mean=[0.485, 0.456, 0.406],  # Normalization is not needed as it is done by pytorch by default
-    #                      std=[0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],  # Normalization is not needed as it is done by pytorch by default
+                         std=[0.229, 0.224, 0.225])
 ])
 
-augmentations = None#get_augmentations()
+augmentations = get_augmentations()
 
 train_dataset = BoarDataset(img_path=TRAIN_IMG_PATH, annotation_path=TRAIN_ANNOTATION_PATH,transform=train_transform, augmentations=augmentations, yolo_format=True)
-train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn,drop_last=True)
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=collate_fn,drop_last=True)
 
 test_dataset = BoarDataset(img_path=TEST_IMG_PATH, annotation_path=TEST_ANNOTATION_PATH,transform=train_transform, yolo_format=True)
-test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=collate_fn, drop_last=True)
+test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False, collate_fn=collate_fn, drop_last=True)
 
 # model = ssdlite320_mobilenet_v3_large(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.IMAGENET1K_V1, trainable_backbone_layers=5)
-model = fasterrcnn_mobilenet_v3_large_fpn(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.IMAGENET1K_V2, trainable_backbone_layers=0)
+model = fasterrcnn_mobilenet_v3_large_fpn(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.DEFAULT, trainable_backbone_layers=0)
 device = None#torch.device("mps")
 model = model.to(device)
 
 params = [p for p in model.parameters() if p.requires_grad]
-optimizer = optim.SGD(params, lr=0.0005, momentum=0.9, weight_decay=0.0005)
-num_epochs = 10
+optimizer = optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
+num_epochs = 30
 
 train_losses = []
 test_losses = []
