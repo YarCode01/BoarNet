@@ -203,7 +203,7 @@ def nms(bboxes, confidence_scores, confidence_threshold, iou_threshold):
     try:
         chosen_bboxes = torch.stack(chosen_bboxes)
     except:
-        chosen_bboxes = torch.tensor([[]])
+        chosen_bboxes = torch.tensor([])
     
     return {"boxes" : chosen_bboxes, "scores": torch.tensor(chosen_scores), "labels" : torch.zeros(len(chosen_scores),dtype=torch.int64)}
 
