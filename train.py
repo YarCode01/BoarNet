@@ -35,11 +35,13 @@ def collate_fn(batch):
 
 train_transform = transforms.Compose([
     transforms.ToTensor(), 
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],  # Normalization is not needed as it is done by pytorch by default
-                         std=[0.229, 0.224, 0.225])
+    # transforms.Normalize(mean=[0.485, 0.456, 0.406],  
+    #                      std=[0.229, 0.224, 0.225])
 ])
 
-augmentations = get_augmentations()
+# Uncomment the first line if you want to use the augmentations
+# augmentations = get_augmentations()
+augmentations = None
 
 train_dataset = BoarDataset(img_path=TRAIN_IMG_PATH, annotation_path=TRAIN_ANNOTATION_PATH,transform=train_transform, augmentations=augmentations, yolo_format=True)
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn,drop_last=True)
@@ -47,13 +49,14 @@ train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=
 test_dataset = BoarDataset(img_path=TEST_IMG_PATH, annotation_path=TEST_ANNOTATION_PATH,transform=train_transform, yolo_format=True)
 test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False, collate_fn=collate_fn, drop_last=True)
 
-# model = ssdlite320_mobilenet_v3_large(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.IMAGENET1K_V1, trainable_backbone_layers=5)
+# model = ssdlite320_mobilenet_v3_large(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.DEFAULT, trainable_backbone_layers=0)
 model = fasterrcnn_mobilenet_v3_large_fpn(num_classes=2, weights_backbone=torchvision.models.MobileNet_V3_Large_Weights.DEFAULT, trainable_backbone_layers=0)
-device = None#torch.device("mps")
+device = torch.device("mps")
 model = model.to(device)
 
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.5)
 num_epochs = 30
 
 train_losses = []
@@ -94,5 +97,7 @@ for epoch in range(num_epochs):
 
     with open(f'{RESULTS_PATH}/test_losses.json', 'w') as f:
         json.dump(test_losses, f, indent=4)
+    
+    scheduler.step()
 
 
