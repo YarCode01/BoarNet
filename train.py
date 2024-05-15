@@ -42,7 +42,7 @@ train_transform = transforms.Compose([
 augmentations = get_augmentations()
 
 train_dataset = BoarDataset(img_path=TRAIN_IMG_PATH, annotation_path=TRAIN_ANNOTATION_PATH,transform=train_transform, augmentations=augmentations, yolo_format=True)
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, collate_fn=collate_fn,drop_last=True)
+train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=collate_fn,drop_last=True)
 
 test_dataset = BoarDataset(img_path=TEST_IMG_PATH, annotation_path=TEST_ANNOTATION_PATH,transform=train_transform, yolo_format=True)
 test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False, collate_fn=collate_fn, drop_last=True)
