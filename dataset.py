@@ -30,7 +30,7 @@ def parse_annotation(annotation_path, img_dim = None, yolo_format=False):
             for line in file:
                 data = line.strip().split()
                 # class_label = int(data[0])
-                class_label = 1 # the class in the text file is wrong
+                class_label = 0
 
                 # Convert coordinates to [x_min, y_min, x_max, y_max]
                 if yolo_format:
